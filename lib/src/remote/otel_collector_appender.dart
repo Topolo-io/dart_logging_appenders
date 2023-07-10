@@ -110,10 +110,12 @@ class OpenTelemetryApiAppender extends BaseDioLogSender {
       (entry) => LogRecord(
         timeUnixNano: (entry.ts.microsecondsSinceEpoch * 1000).toString(),
         body: Body(stringValue: entry.line),
+        severityText: entry.lineLabels['lvl'],
+        name: entry.lineLabels['logger'],
         attributes: entry.lineLabels.entries
             .map(
               (var mapEntry) => Attributes(
-                key: 'key',
+                key: mapEntry.key,
                 value: Value(stringValue: mapEntry.value),
               ),
             )
