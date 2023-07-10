@@ -109,7 +109,7 @@ abstract class BaseDioLogSender extends BaseLogSender {
     streamController.onListen = () {
       sendLogEventsWithDio(logEntries, userProperties, cancelToken).then((val) {
         if (!streamController.isClosed) {
-          streamController.add(null);
+          // streamController.add(null);
           streamController.close();
         }
       }).catchError((dynamic err, StackTrace stackTrace) {
@@ -148,6 +148,8 @@ typedef SimpleJobRunner = Stream<void> Function(SimpleJobDef job);
 class SimpleJobDef {
   SimpleJobDef({required this.runner});
 
+  bool completedSuccessfully = false;
+
   final SimpleJobRunner runner;
 }
 
@@ -177,16 +179,16 @@ class SimpleJobQueue {
     var successfulJobs = 0;
 //    final job = _queue.removeFirst();
     _currentStream = (() async* {
-      final copyQueue = _queue.map((job) async {
+      final copyQueue = _queue.where((job) => job.completedSuccessfully == false).map((job) async {
         await job.runner(job).drain(null);
         return job;
-      });
+      }).toList();
       for (final job in copyQueue) {
         yield await job;
       }
     })()
         .listen((successJob) {
-      _queue.remove(successJob);
+          successJob.completedSuccessfully = true;
       successfulJobs++;
       _logger.finest(
           'Success job. remaining: ${_queue.length} - completed: $successfulJobs');
@@ -196,6 +198,7 @@ class SimpleJobQueue {
       _lastError = null;
 
       _currentStream = null;
+      _queue.removeWhere((job) => job.completedSuccessfully == true);
       completer.complete(successfulJobs);
     }, onError: (Object error, StackTrace stackTrace) {
       _logger.warning('Error while executing job', error, stackTrace);
