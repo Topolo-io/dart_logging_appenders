@@ -9,5 +9,6 @@ export 'src/logrecord_formatter.dart';
 export 'src/print_appender.dart' show PrintAppender;
 export 'src/remote/logzio_appender.dart' show LogzIoApiAppender;
 export 'src/remote/loki_appender.dart' show LokiApiAppender;
+export 'src/remote/otel_collector_appender.dart' show OpenTelemetryApiAppender;
 export 'src/rotating_file_appender.dart'
     show AsyncInitializingLogHandler, RotatingFileAppender;
